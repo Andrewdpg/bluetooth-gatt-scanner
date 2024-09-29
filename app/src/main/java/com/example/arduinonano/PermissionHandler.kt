@@ -5,7 +5,16 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.result.contract.ActivityResultContracts
 
-class PermissionHandler(activity: AppCompatActivity, private val onPermissionsGranted: (Boolean) -> Unit) {
+/**
+ * Handles Bluetooth and location permissions for the app.
+ *
+ * @param activity The activity where permissions are being requested.
+ * @param onPermissionsGranted Callback invoked when all permissions are granted or denied.
+ */
+class PermissionHandler(
+    private val activity: AppCompatActivity,
+    private val onPermissionsGranted: (Boolean) -> Unit
+) {
 
     private val requestPermissionLauncher = activity.registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -14,6 +23,9 @@ class PermissionHandler(activity: AppCompatActivity, private val onPermissionsGr
         onPermissionsGranted(allGranted)
     }
 
+    /**
+     * Checks and requests necessary Bluetooth permissions based on the Android version.
+     */
     fun checkPermissions() {
         val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             arrayOf(

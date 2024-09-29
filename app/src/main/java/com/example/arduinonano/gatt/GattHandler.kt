@@ -1,4 +1,4 @@
-package com.example.arduinonano
+package com.example.arduinonano.gatt
 
 import android.annotation.SuppressLint
 import android.bluetooth.*
@@ -6,15 +6,29 @@ import android.content.Context
 import android.util.Log
 import java.util.*
 
+/**
+ * Manages Bluetooth GATT connections, service discovery, and characteristic notifications.
+ *
+ * @param context The context in which GATT operations are executed.
+ */
 class GattHandler(private val context: Context) {
-    private var bluetoothGatt: BluetoothGatt? = null
-    private val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb") // UUID for Client Characteristic Configuration Descriptor (CCCD)
 
+    private var bluetoothGatt: BluetoothGatt? = null
+    private val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb") // Client Characteristic Configuration Descriptor UUID
+
+    /**
+     * Connects to the GATT server of the specified Bluetooth device.
+     *
+     * @param device The Bluetooth device to connect to.
+     */
     @SuppressLint("MissingPermission")
     fun connectGatt(device: BluetoothDevice) {
         bluetoothGatt = device.connectGatt(context, false, gattCallback)
     }
 
+    /**
+     * Disconnects from the GATT server and releases resources.
+     */
     @SuppressLint("MissingPermission")
     fun disconnectGatt() {
         bluetoothGatt?.disconnect()
@@ -23,6 +37,9 @@ class GattHandler(private val context: Context) {
         Log.d("GattHandler", "Disconnected from GATT server.")
     }
 
+    /**
+     * Callback to handle GATT events such as connection state changes and service discovery.
+     */
     private val gattCallback = object : BluetoothGattCallback() {
 
         @SuppressLint("MissingPermission")
@@ -70,6 +87,12 @@ class GattHandler(private val context: Context) {
             }
         }
 
+        /**
+         * Enables notifications for the given characteristic if supported.
+         *
+         * @param gatt The GATT client.
+         * @param characteristic The characteristic for which to enable notifications.
+         */
         @SuppressLint("MissingPermission")
         private fun enableNotification(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             if (characteristic.properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) {
@@ -85,6 +108,12 @@ class GattHandler(private val context: Context) {
             }
         }
 
+        /**
+         * Reads the value of the specified characteristic.
+         *
+         * @param gatt The GATT client.
+         * @param characteristic The characteristic to read.
+         */
         @SuppressLint("MissingPermission")
         private fun readCharacteristic(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             gatt.readCharacteristic(characteristic)

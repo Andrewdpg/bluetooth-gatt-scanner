@@ -14,18 +14,26 @@ import android.widget.Button
 import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.arduinonano.gatt.GattHandler
 
+/**
+ * MainActivity manages the user interface for scanning and connecting to Bluetooth devices.
+ * It handles Bluetooth permissions, scanning, and displaying discovered devices.
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bluetoothAdapter: BluetoothAdapter
     private lateinit var devicesAdapter: ArrayAdapter<String>
     private val devicesList = mutableListOf<BluetoothDevice>()
-    private var gattHandler: GattHandler? = null  // GattHandler to manage connection
+    private var gattHandler: GattHandler? = null
 
     private lateinit var scanButton: Button
     private lateinit var disconnectButton: Button
     private lateinit var deviceListView: ListView
 
+    /**
+     * Initializes the activity, UI elements, and Bluetooth components.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -41,24 +49,20 @@ class MainActivity : AppCompatActivity() {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
 
-        // Set up the ArrayAdapter to display the devices
+        // Set up the ArrayAdapter to display discovered devices
         devicesAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, mutableListOf())
         deviceListView.adapter = devicesAdapter
 
-        // Set up scan button
-        scanButton.setOnClickListener {
-            startBluetoothScan()
-        }
+        // Set up scan button click listener
+        scanButton.setOnClickListener { startBluetoothScan() }
 
-        // Set up disconnect button
-        disconnectButton.setOnClickListener {
-            gattHandler?.disconnectGatt()
-        }
+        // Set up disconnect button click listener
+        disconnectButton.setOnClickListener { gattHandler?.disconnectGatt() }
 
-        // Register the receiver for discovered devices
+        // Register receiver to handle discovered Bluetooth devices
         registerReceiver(receiver, IntentFilter(BluetoothDevice.ACTION_FOUND))
 
-        // Handle device click event
+        // Handle device selection from the list
         deviceListView.setOnItemClickListener { _, _, position, _ ->
             val device = devicesList[position]
             gattHandler = GattHandler(this)
@@ -66,6 +70,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Requests necessary Bluetooth permissions using the PermissionHandler.
+     */
     private fun requestPermissions() {
         val permissionHandler = PermissionHandler(this) { granted ->
             if (!granted) {
@@ -75,23 +82,32 @@ class MainActivity : AppCompatActivity() {
         permissionHandler.checkPermissions()
     }
 
+    /**
+     * Cleans up resources, disconnects GATT, and unregisters the broadcast receiver.
+     */
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(receiver)
-        gattHandler?.disconnectGatt()  // Disconnect on activity destroy
+        gattHandler?.disconnectGatt()
     }
 
+    /**
+     * Starts Bluetooth scanning and updates the UI with discovered devices.
+     */
     @SuppressLint("MissingPermission")
     private fun startBluetoothScan() {
         devicesAdapter.clear()
         devicesList.clear()
-        if(bluetoothAdapter.isDiscovering){
+        if (bluetoothAdapter.isDiscovering) {
             bluetoothAdapter.cancelDiscovery()
         }
         bluetoothAdapter.startDiscovery()
         showToast("Scanning for devices...")
     }
 
+    /**
+     * BroadcastReceiver to handle discovered Bluetooth devices during the scan.
+     */
     private val receiver = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -106,6 +122,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Displays a toast message to the user.
+     *
+     * @param message The message to be displayed.
+     */
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
